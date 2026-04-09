@@ -5,334 +5,248 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Illumina Flow Cell Calculator</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f5f5f4;
-      --bg-tertiary: #f0efed;
-      --bg-info: #e6f1fb;
-      --bg-success: #eaf3de;
-      --bg-warning: #faeeda;
-      --text-primary: #1a1a18;
-      --text-secondary: #5f5e5a;
-      --text-tertiary: #888780;
-      --text-info: #185fa5;
-      --text-success: #3b6d11;
-      --text-warning: #854f0b;
-      --border-tertiary: rgba(26,26,24,0.15);
-      --border-secondary: rgba(26,26,24,0.3);
-      --border-primary: rgba(26,26,24,0.4);
-      --border-info: rgba(24,95,165,0.4);
-      --radius-md: 8px;
-      --radius-lg: 12px;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f5f4;
+      --color-background-tertiary: #f0efed;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #eaf3de;
+      --color-background-warning: #faeeda;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #185fa5;
+      --color-text-success: #3b6d11;
+      --color-text-warning: #854f0b;
+      --color-border-tertiary: rgba(26,26,24,0.15);
+      --color-border-secondary: rgba(26,26,24,0.3);
+      --color-border-primary: rgba(26,26,24,0.4);
+      --color-border-info: rgba(24,95,165,0.4);
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-primary: #1e1e1c;
-        --bg-secondary: #2a2a28;
-        --bg-tertiary: #242422;
-        --bg-info: #042c53;
-        --bg-success: #173404;
-        --bg-warning: #412402;
-        --text-primary: #f0efe9;
-        --text-secondary: #b4b2a9;
-        --text-tertiary: #888780;
-        --text-info: #85b7eb;
-        --text-success: #97c459;
-        --text-warning: #ef9f27;
-        --border-tertiary: rgba(240,239,233,0.15);
-        --border-secondary: rgba(240,239,233,0.3);
-        --border-primary: rgba(240,239,233,0.4);
-        --border-info: rgba(133,183,235,0.4);
+        --color-background-primary: #1e1e1c;
+        --color-background-secondary: #2a2a28;
+        --color-background-tertiary: #242422;
+        --color-background-info: #042c53;
+        --color-background-success: #173404;
+        --color-background-warning: #412402;
+        --color-text-primary: #f0efe9;
+        --color-text-secondary: #b4b2a9;
+        --color-text-tertiary: #888780;
+        --color-text-info: #85b7eb;
+        --color-text-success: #97c459;
+        --color-text-warning: #ef9f27;
+        --color-border-tertiary: rgba(240,239,233,0.15);
+        --color-border-secondary: rgba(240,239,233,0.3);
+        --color-border-primary: rgba(240,239,233,0.4);
+        --color-border-info: rgba(133,183,235,0.4);
       }
     }
-
-    body {
-      font-family: var(--font-sans);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-primary);
       min-height: 100vh;
-      padding: 2rem 1rem 4rem;
     }
-
-    .page-header {
-      max-width: 860px;
-      margin: 0 auto 1.5rem;
+    .page-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
     }
-    .page-header h1 {
-      font-size: 20px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 2px;
-    }
-    .page-header p {
-      font-size: 13px;
-      color: var(--text-tertiary);
-    }
-
-    .container { max-width: 860px; margin: 0 auto; }
-
-    .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
-    .tab {
-      padding: 5px 16px;
-      border-radius: var(--radius-md);
-      border: 0.5px solid var(--border-secondary);
-      font-size: 13px;
-      cursor: pointer;
-      background: var(--bg-primary);
-      color: var(--text-secondary);
-      user-select: none;
-    }
-    .tab.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-weight: 500;
-      border-color: var(--border-primary);
-    }
-    .tab:hover:not(.active) { background: var(--bg-secondary); }
-
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-
-    .card {
-      background: var(--bg-primary);
-      border: 0.5px solid var(--border-tertiary);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.25rem;
-      flex: 1;
-      min-width: 220px;
-    }
-
-    .metric {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      padding: .85rem 1rem;
-      flex: 1;
-      min-width: 120px;
-    }
-    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
-    .metric-value { font-size: 20px; font-weight: 500; color: var(--text-primary); line-height: 1.2; }
-    .metric-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-
-    label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
-    select, input[type=number] {
-      width: 100%;
-      padding: 6px 8px;
-      border: 0.5px solid var(--border-secondary);
-      border-radius: var(--radius-md);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-size: 14px;
-      font-family: var(--font-sans);
-    }
-    select:focus, input:focus {
-      outline: none;
-      border-color: var(--border-primary);
-      box-shadow: 0 0 0 2px var(--border-info);
-    }
-
-    .field { margin-bottom: 10px; }
-    .sec {
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      margin-bottom: 10px;
-    }
-    .divider { border: none; border-top: 0.5px solid var(--border-tertiary); margin: 1rem 0; }
-
-    .alert { font-size: 12px; border-radius: var(--radius-md); padding: 7px 10px; margin-top: 8px; }
-    .alert-warn { color: var(--text-warning); background: var(--bg-warning); }
-    .alert-ok   { color: var(--text-success); background: var(--bg-success); }
-    .alert-info { color: var(--text-info);    background: var(--bg-info); }
-
-    .ref-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 5px 0;
-      border-bottom: 0.5px solid var(--border-tertiary);
-      font-size: 13px;
-    }
-    .ref-row:last-child { border-bottom: none; }
-    .ref-label { color: var(--text-secondary); }
-    .ref-val { font-weight: 500; color: var(--text-primary); text-align: right; flex-shrink: 0; margin-left: 8px; }
-
-    .rec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
-    .rec-table th {
-      font-size: 11px; font-weight: 500; color: var(--text-tertiary);
-      text-align: left; padding: 4px 6px;
-      border-bottom: 0.5px solid var(--border-tertiary);
-    }
-    .rec-table td {
-      padding: 5px 6px;
-      border-bottom: 0.5px solid var(--border-tertiary);
-      color: var(--text-primary);
-      vertical-align: top;
-    }
-    .rec-table tr:last-child td { border-bottom: none; }
-
-    .badge {
-      display: inline-block; font-size: 10px;
-      padding: 1px 6px; border-radius: var(--radius-md);
-      font-weight: 500; white-space: nowrap;
-    }
-    .badge-ok   { background: var(--bg-success); color: var(--text-success); }
-    .badge-warn { background: var(--bg-warning); color: var(--text-warning); }
-    .badge-muted{ background: var(--bg-secondary); color: var(--text-secondary); }
-
-    .rs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .rs-field { display: flex; flex-direction: column; gap: 4px; }
-    .rs-field label { font-size: 12px; color: var(--text-secondary); }
-    .rs-summary {
-      font-size: 13px; color: var(--text-primary);
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      padding: 10px 12px; margin-top: 4px;
-      font-family: var(--font-mono);
-      letter-spacing: .03em;
-    }
-    .rs-total { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
-    .rs-warn {
-      font-size: 12px; color: var(--text-warning);
-      background: var(--bg-warning);
-      border-radius: var(--radius-md);
-      padding: 6px 10px; margin-top: 8px;
-    }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
+    .page-header p { font-size: 13px; color: var(--color-text-tertiary); }
+    .sr-only { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0); }
   </style>
 </head>
 <body>
-<div class="page-header">
-  <h1>Illumina Flow Cell Calculator</h1>
-  <p>Single-cell sequencing depth, bulk sample planning, read structure, and loading reference.</p>
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Illumina Flow Cell Calculator</h1>
+    <p>Single-cell sequencing depth, bulk sample planning, read structure, and loading reference.</p>
+  </div>
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0 2.5rem}
+.tab-bar{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:5px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:13px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary)}
+.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500;border-color:var(--color-border-primary)}
+.panel{display:none}.panel.active{display:block}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;flex:1;min-width:220px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.85rem 1rem;flex:1;min-width:120px}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:3px}
+.metric-value{font-size:20px;font-weight:500;color:var(--color-text-primary);line-height:1.2}
+.metric-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+label{font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px}
+.field{margin-bottom:10px}
+.sec{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1rem 0}
+.alert{font-size:12px;border-radius:var(--border-radius-md);padding:7px 10px;margin-top:8px}
+.alert-warn{color:var(--color-text-warning);background:var(--color-background-warning)}
+.alert-ok{color:var(--color-text-success);background:var(--color-background-success)}
+.alert-info{color:var(--color-text-info);background:var(--color-background-info)}
+.ref-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.ref-row:last-child{border-bottom:none}
+.ref-label{color:var(--color-text-secondary)}
+.ref-val{font-weight:500;color:var(--color-text-primary);text-align:right;flex-shrink:0;margin-left:8px}
+.rec-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.rec-table th{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-align:left;padding:4px 6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.rec-table td{padding:5px 6px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top}
+.rec-table tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:var(--border-radius-md);font-weight:500;white-space:nowrap}
+.badge-ok{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.badge-muted{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.rs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rs-field{display:flex;flex-direction:column;gap:4px}
+.rs-field label{font-size:12px;color:var(--color-text-secondary)}
+.rs-summary{font-size:13px;color:var(--color-text-primary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-top:4px;font-family:var(--font-mono);letter-spacing:.03em}
+.rs-total{font-size:12px;color:var(--color-text-secondary);margin-top:6px}
+.rs-warn{font-size:12px;color:var(--color-text-warning);background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:6px 10px;margin-top:8px}
+.compat-table{width:100%;border-collapse:collapse;font-size:13px}
+.compat-table th{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-align:left;padding:4px 6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.compat-table td{padding:5px 6px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+.compat-table tr:last-child td{border-bottom:none}
+</style>
+
+<div class="wrap">
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('sc')">Single-cell</div>
+  <div class="tab" onclick="switchTab('bulk')">Bulk / standard</div>
+  <div class="tab" onclick="switchTab('readstruct')">Read structure</div>
+  <div class="tab" onclick="switchTab('loading')">Loading ref</div>
 </div>
 
-<div class="container">
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('sc')">Single-cell</div>
-    <div class="tab" onclick="switchTab('bulk')">Bulk / standard</div>
-    <div class="tab" onclick="switchTab('readstruct')">Read structure</div>
-    <div class="tab" onclick="switchTab('loading')">Loading ref</div>
+<!-- shared instrument selector -->
+<div class="row">
+  <div class="card" style="flex:2;min-width:260px">
+    <p class="sec">Instrument & flow cell</p>
+    <div class="field"><label>Platform</label><select id="platform" onchange="onPlatformChange()"></select></div>
+    <div class="field"><label>Flow cell / kit</label><select id="flowcell" onchange="calc()"></select></div>
+    <div class="field"><label>Read type</label>
+      <select id="readtype" onchange="calc()">
+        <option value="PE">Paired-end (PE)</option>
+        <option value="SE">Single-end (SE)</option>
+      </select>
+    </div>
+    <div class="field"><label>PhiX spike-in (%)</label><input type="number" id="phix" value="5" min="0" max="50" step="0.5" oninput="calc()"></div>
   </div>
+  <div class="card" style="flex:1;min-width:180px">
+    <p class="sec">Flow cell output</p>
+    <div id="fc-summary"></div>
+  </div>
+</div>
 
-  <!-- shared instrument selector -->
+<!-- SINGLE-CELL -->
+<div id="panel-sc" class="panel active">
   <div class="row">
-    <div class="card" style="flex:2;min-width:260px">
-      <p class="sec">Instrument & flow cell</p>
-      <div class="field"><label>Platform</label><select id="platform" onchange="onPlatformChange()"></select></div>
-      <div class="field"><label>Flow cell / kit</label><select id="flowcell" onchange="calc()"></select></div>
-      <div class="field"><label>Read type</label>
-        <select id="readtype" onchange="calc()">
-          <option value="PE">Paired-end (PE)</option>
-          <option value="SE">Single-end (SE)</option>
-        </select>
-      </div>
-      <div class="field"><label>PhiX spike-in (%)</label><input type="number" id="phix" value="5" min="0" max="50" step="0.5" oninput="calc()"></div>
+    <div class="card" style="flex:1;min-width:240px">
+      <p class="sec">Single-cell parameters</p>
+      <div class="field"><label>Total cells / nuclei sequenced</label><input type="number" id="ncells" value="5000" min="1" step="100" oninput="calcSC()"></div>
+      <div class="field"><label>Target reads per cell</label><input type="number" id="rpc-target" value="20000" min="100" step="1000" oninput="calcSC()"></div>
     </div>
-    <div class="card" style="flex:1;min-width:180px">
-      <p class="sec">Flow cell output</p>
-      <div id="fc-summary"></div>
+    <div class="card" style="flex:2;min-width:280px">
+      <p class="sec">Results — selected flow cell</p>
+      <div class="row" id="sc-metrics" style="margin-bottom:0"></div>
+      <div id="sc-note"></div>
     </div>
   </div>
+  <div class="card">
+    <p class="sec">Flow cell recommendations — all platforms</p>
+    <div style="overflow-x:auto">
+      <table class="rec-table">
+        <thead><tr>
+          <th>Platform</th><th>Flow cell</th><th>Usable reads</th><th>Reads/cell</th><th>Fit?</th>
+        </tr></thead>
+        <tbody id="rec-body"></tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">Reads/cell after PhiX subtraction. Green = meets target. Yellow = exceeds target by &gt;3×. Gray = below target.</div>
+  </div>
+</div>
 
-  <!-- SINGLE-CELL -->
-  <div id="panel-sc" class="panel active">
-    <div class="row">
-      <div class="card" style="flex:1;min-width:240px">
-        <p class="sec">Single-cell parameters</p>
-        <div class="field"><label>Total cells / nuclei sequenced</label><input type="number" id="ncells" value="5000" min="1" step="100" oninput="calcSC()"></div>
-        <div class="field"><label>Target reads per cell</label><input type="number" id="rpc-target" value="20000" min="100" step="1000" oninput="calcSC()"></div>
+<!-- BULK -->
+<div id="panel-bulk" class="panel">
+  <div class="row">
+    <div class="card" style="flex:1;min-width:240px">
+      <p class="sec">Sample parameters</p>
+      <div class="field"><label>Number of samples</label><input type="number" id="nsamples" value="16" min="1" oninput="calcBulk()"></div>
+      <div class="field"><label>Target reads per sample (thousands)</label>
+        <input type="number" id="target" value="25000" min="100" oninput="calcBulk()">
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">e.g. 25000 = 25M reads</div>
       </div>
-      <div class="card" style="flex:2;min-width:280px">
-        <p class="sec">Results — selected flow cell</p>
-        <div class="row" id="sc-metrics" style="margin-bottom:0"></div>
-        <div id="sc-note"></div>
+    </div>
+    <div class="card" style="flex:2;min-width:280px">
+      <p class="sec">Results</p>
+      <div class="row" id="bulk-metrics" style="margin-bottom:0"></div>
+      <div id="bulk-note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- READ STRUCTURE -->
+<div id="panel-readstruct" class="panel">
+  <div class="row">
+    <div class="card" style="flex:1;min-width:260px">
+      <p class="sec">Cycle inputs</p>
+      <div class="rs-grid">
+        <div class="rs-field"><label>Read 1 (cycles)</label><input type="number" id="rs-r1" value="0" min="0" max="600" oninput="calcRS()"></div>
+        <div class="rs-field"><label>Read 2 (cycles)</label><input type="number" id="rs-r2" value="0" min="0" max="600" oninput="calcRS()"></div>
+        <div class="rs-field"><label>Index 1 (cycles)</label><input type="number" id="rs-i1" value="0" min="0" max="100" oninput="calcRS()"></div>
+        <div class="rs-field"><label>Index 2 (cycles)</label><input type="number" id="rs-i2" value="0" min="0" max="100" oninput="calcRS()"></div>
       </div>
+    </div>
+    <div class="card" style="flex:1;min-width:240px">
+      <p class="sec">Read structure summary</p>
+      <div class="rs-summary" id="rs-display">—</div>
+      <div class="rs-total" id="rs-total"></div>
+      <div id="rs-kit-note"></div>
+    </div>
+  </div>
+  <div class="card">
+    <p class="sec">Kit cycle compatibility — <span id="rs-plat-name"></span></p>
+    <div style="overflow-x:auto">
+      <table class="compat-table">
+        <thead><tr>
+          <th>Kit</th><th>Named cycles</th><th>Extra cycles</th><th>Total available</th><th>Your structure</th><th>Remaining</th>
+        </tr></thead>
+        <tbody id="rs-compat-body"></tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">Extra cycles are included in all kits beyond the stated cycle count and can be used for index reads or extended read lengths. Green = fits. Gray = below total cycles needed.</div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="panel-loading" class="panel">
+  <div class="row">
+    <div class="card">
+      <p class="sec">Loading parameters — <span id="plat-name-load"></span></p>
+      <div id="loading-detail"></div>
     </div>
     <div class="card">
-      <p class="sec">Flow cell recommendations — all platforms</p>
-      <div style="overflow-x:auto">
-        <table class="rec-table">
-          <thead><tr>
-            <th>Platform</th><th>Flow cell</th><th>Usable reads</th><th>Reads/cell</th><th>Fit?</th>
-          </tr></thead>
-          <tbody id="rec-body"></tbody>
-        </table>
-      </div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px">Reads/cell after PhiX subtraction. Green = meets target. Yellow = exceeds target by &gt;3×. Gray = below target.</div>
+      <p class="sec">PhiX guidance by library type</p>
+      <div class="ref-row"><span class="ref-label">Standard diverse library</span><span class="ref-val">1–5%</span></div>
+      <div class="ref-row"><span class="ref-label">scRNA-seq / snRNA-seq</span><span class="ref-val">1–10%</span></div>
+      <div class="ref-row"><span class="ref-label">snRNA-seq (high N-content)</span><span class="ref-val">5–15%</span></div>
+      <div class="ref-row"><span class="ref-label">Amplicon / CRISPR screen</span><span class="ref-val">10–30%</span></div>
+      <div class="ref-row"><span class="ref-label">Low-complexity (16S etc.)</span><span class="ref-val">20–50%</span></div>
     </div>
   </div>
-
-  <!-- BULK -->
-  <div id="panel-bulk" class="panel">
-    <div class="row">
-      <div class="card" style="flex:1;min-width:240px">
-        <p class="sec">Sample parameters</p>
-        <div class="field"><label>Number of samples</label><input type="number" id="nsamples" value="16" min="1" oninput="calcBulk()"></div>
-        <div class="field"><label>Target reads per sample (thousands)</label>
-          <input type="number" id="target" value="25000" min="100" oninput="calcBulk()">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">e.g. 25000 = 25M reads</div>
-        </div>
-      </div>
-      <div class="card" style="flex:2;min-width:280px">
-        <p class="sec">Results</p>
-        <div class="row" id="bulk-metrics" style="margin-bottom:0"></div>
-        <div id="bulk-note"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- READ STRUCTURE -->
-  <div id="panel-readstruct" class="panel">
-    <div class="row">
-      <div class="card" style="flex:1;min-width:260px">
-        <p class="sec">Cycle inputs</p>
-        <div class="rs-grid">
-          <div class="rs-field"><label>Read 1 (cycles)</label><input type="number" id="rs-r1" value="0" min="0" max="600" oninput="calcRS()"></div>
-          <div class="rs-field"><label>Read 2 (cycles)</label><input type="number" id="rs-r2" value="0" min="0" max="600" oninput="calcRS()"></div>
-          <div class="rs-field"><label>Index 1 (cycles)</label><input type="number" id="rs-i1" value="0" min="0" max="20" oninput="calcRS()"></div>
-          <div class="rs-field"><label>Index 2 (cycles)</label><input type="number" id="rs-i2" value="0" min="0" max="20" oninput="calcRS()"></div>
-        </div>
-      </div>
-      <div class="card" style="flex:1;min-width:240px">
-        <p class="sec">Read structure summary</p>
-        <div class="rs-summary" id="rs-display">—</div>
-        <div class="rs-total" id="rs-total"></div>
-        <div id="rs-kit-note"></div>
-        <hr class="divider">
-        <p class="sec">Kit cycle compatibility</p>
-        <div id="rs-compat"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOADING -->
-  <div id="panel-loading" class="panel">
-    <div class="row">
-      <div class="card">
-        <p class="sec">Loading parameters — <span id="plat-name-load"></span></p>
-        <div id="loading-detail"></div>
-      </div>
-      <div class="card">
-        <p class="sec">PhiX guidance by library type</p>
-        <div class="ref-row"><span class="ref-label">Standard diverse library</span><span class="ref-val">1–5%</span></div>
-        <div class="ref-row"><span class="ref-label">scRNA-seq / snRNA-seq</span><span class="ref-val">1–10%</span></div>
-        <div class="ref-row"><span class="ref-label">snRNA-seq (high N-content)</span><span class="ref-val">5–15%</span></div>
-        <div class="ref-row"><span class="ref-label">Amplicon / CRISPR screen</span><span class="ref-val">10–30%</span></div>
-        <div class="ref-row"><span class="ref-label">Low-complexity (16S etc.)</span><span class="ref-val">20–50%</span></div>
-      </div>
-    </div>
-  </div>
+</div>
 </div>
 
 <script>
+// kits: [{name, cycles, extra}]
+// extra = bonus cycles included in the kit reagents beyond the stated kit size
 const PLATFORMS = {
   "NovaSeq X / X Plus": {
     se:0.55,
@@ -343,7 +257,11 @@ const PLATFORMS = {
       "10B FC — 20B reads":{reads:20000,note:""},
       "25B FC — 26B reads (X Plus)":{reads:26000,note:"X Plus only"},
     },
-    kits:[100,200,300]
+    kits:[
+      {name:"100-cycle",  cycles:100, extra:38},
+      {name:"200-cycle",  cycles:200, extra:38},
+      {name:"300-cycle",  cycles:300, extra:38},
+    ]
   },
   "NovaSeq 6000": {
     se:0.55,
@@ -354,7 +272,12 @@ const PLATFORMS = {
       "S2 — 4B reads":{reads:4000},
       "S4 — 10B reads":{reads:10000},
     },
-    kits:[100,200,300]
+    kits:[
+      {name:"100-cycle",  cycles:100, extra:38},
+      {name:"200-cycle",  cycles:200, extra:38},
+      {name:"300-cycle",  cycles:300, extra:38},
+      {name:"500-cycle (SP only)", cycles:500, extra:38},
+    ]
   },
   "NextSeq 2000 / 1000": {
     se:0.6,
@@ -365,7 +288,12 @@ const PLATFORMS = {
       "P3 — 1.2B reads":{reads:1200,note:"NextSeq 2000 only"},
       "P4 — 1.8B reads":{reads:1800,note:"NextSeq 2000 only"},
     },
-    kits:[100,200,300,600]
+    kits:[
+      {name:"100-cycle",  cycles:100, extra:38},
+      {name:"200-cycle",  cycles:200, extra:38},
+      {name:"300-cycle",  cycles:300, extra:38},
+      {name:"600-cycle",  cycles:600, extra:38},
+    ]
   },
   "NextSeq 550": {
     se:0.6,
@@ -374,7 +302,11 @@ const PLATFORMS = {
       "Mid — 130M reads":{reads:130},
       "High — 400M reads":{reads:400},
     },
-    kits:[75,150,300]
+    kits:[
+      {name:"75-cycle",   cycles:75,  extra:17},
+      {name:"150-cycle",  cycles:150, extra:17},
+      {name:"300-cycle",  cycles:300, extra:18},
+    ]
   },
   "MiSeq": {
     se:0.65,
@@ -388,7 +320,14 @@ const PLATFORMS = {
       "v3 — 25M reads":{reads:25},
       "v3 — 44M reads":{reads:44,note:"PE 2×300"},
     },
-    kits:[50,150,300,500,600]
+    kits:[
+      {name:"50-cycle (v2)",   cycles:50,  extra:26},
+      {name:"150-cycle (v2)",  cycles:150, extra:26},
+      {name:"300-cycle (v2)",  cycles:300, extra:26},
+      {name:"500-cycle (v2)",  cycles:500, extra:26},
+      {name:"150-cycle (v3)",  cycles:150, extra:26},
+      {name:"600-cycle (v3)",  cycles:600, extra:26},
+    ]
   }
 };
 
@@ -471,10 +410,10 @@ function buildRecTable(nCells,rpcTarget){
         :`<span class="badge badge-ok">meets target</span>`;
       const isSelected=platSel.value===platName&&fcSel.value===fcName;
       const tr=document.createElement('tr');
-      if(isSelected) tr.style.cssText='outline:2px solid rgba(24,95,165,0.5);outline-offset:-2px';
+      if(isSelected) tr.style.cssText='outline:2px solid var(--color-border-info);outline-offset:-2px';
       tr.innerHTML=`
         <td>${platName}</td>
-        <td>${fcName}${fc.note?` <span style="color:var(--text-tertiary);font-size:11px">(${fc.note})</span>`:''}</td>
+        <td>${fcName}${fc.note?` <span style="color:var(--color-text-tertiary);font-size:11px">(${fc.note})</span>`:''}</td>
         <td>${fmtM(usable)}</td>
         <td>${fmtRPC(rpcActual/1000)}k</td>
         <td>${badge}</td>
@@ -508,6 +447,7 @@ function calcRS(){
   const i1=parseInt(document.getElementById('rs-i1').value)||0;
   const i2=parseInt(document.getElementById('rs-i2').value)||0;
   const total=r1+r2+i1+i2;
+
   const parts=[];
   if(r1) parts.push(`R1: ${r1} cy`);
   if(i1) parts.push(`I1: ${i1} cy`);
@@ -515,25 +455,40 @@ function calcRS(){
   if(r2) parts.push(`R2: ${r2} cy`);
   document.getElementById('rs-display').textContent=parts.length?parts.join('  ·  '):'—';
   document.getElementById('rs-total').textContent=total?`Total: ${total} cycles  (R1+R2: ${r1+r2} cy, Index: ${i1+i2} cy)`:'';
+
   let warn='';
   if(r2>0&&document.getElementById('readtype').value==='SE')
     warn='Read 2 cycles are set but Single-end is selected above. Switch to Paired-end or set Read 2 to 0.';
   if(i1===0&&i2>0)
     warn='Index 2 is set without Index 1. Dual indexing requires Index 1 to be defined.';
   document.getElementById('rs-kit-note').innerHTML=warn?`<div class="rs-warn">${warn}</div>`:'';
-  const kitCycles=(PLATFORMS[platSel.value].kits||[]);
-  let compatHTML='';
-  kitCycles.forEach(k=>{
-    const fits=total>0&&total<=k;
-    const waste=fits?k-total:null;
-    compatHTML+=`<div class="ref-row">
-      <span class="ref-label">${k}-cycle kit</span>
-      <span class="ref-val">${total===0?'<span style="color:var(--text-tertiary);font-size:12px">—</span>':fits
-        ?`<span class="badge badge-ok">fits</span> <span style="font-size:11px;color:var(--text-tertiary)">${waste} cy unused</span>`
-        :`<span class="badge badge-muted">too short by ${total-k} cy</span>`
-      }</span></div>`;
+
+  const platName=platSel.value;
+  const plat=PLATFORMS[platName];
+  document.getElementById('rs-plat-name').textContent=platName;
+
+  const tbody=document.getElementById('rs-compat-body');
+  tbody.innerHTML='';
+  (plat.kits||[]).forEach(k=>{
+    const totalAvail=k.cycles+k.extra;
+    const fits=total>0&&total<=totalAvail;
+    const remaining=totalAvail-total;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${k.name}</td>
+      <td style="color:var(--color-text-secondary)">${k.cycles} cy</td>
+      <td style="color:var(--color-text-secondary)">+${k.extra} cy</td>
+      <td style="font-weight:500">${totalAvail} cy</td>
+      <td>${total===0
+        ?'<span style="color:var(--color-text-tertiary)">—</span>'
+        :fits
+          ?`<span class="badge badge-ok">fits</span>`
+          :`<span class="badge badge-muted">too short by ${total-totalAvail} cy</span>`
+      }</td>
+      <td style="color:var(--color-text-secondary);font-size:12px">${total===0?'—':fits?`${remaining} cy unused`:'—'}</td>
+    `;
+    tbody.appendChild(tr);
   });
-  document.getElementById('rs-compat').innerHTML=compatHTML||'<span style="font-size:13px;color:var(--text-secondary)">No kit data for this platform.</span>';
 }
 
 function calcLoading(){
@@ -558,5 +513,6 @@ function switchTab(t){
 
 onPlatformChange();
 </script>
+</div>
 </body>
 </html>
