@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illumina Flow Cell Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f4;
+      --bg-tertiary: #f0efed;
+      --bg-info: #e6f1fb;
+      --bg-success: #eaf3de;
+      --bg-warning: #faeeda;
+      --text-primary: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --text-info: #185fa5;
+      --text-success: #3b6d11;
+      --text-warning: #854f0b;
+      --border-tertiary: rgba(26,26,24,0.15);
+      --border-secondary: rgba(26,26,24,0.3);
+      --border-primary: rgba(26,26,24,0.4);
+      --border-info: rgba(24,95,165,0.4);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-tertiary: #242422;
+        --bg-info: #042c53;
+        --bg-success: #173404;
+        --bg-warning: #412402;
+        --text-primary: #f0efe9;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --text-info: #85b7eb;
+        --text-success: #97c459;
+        --text-warning: #ef9f27;
+        --border-tertiary: rgba(240,239,233,0.15);
+        --border-secondary: rgba(240,239,233,0.3);
+        --border-primary: rgba(240,239,233,0.4);
+        --border-info: rgba(133,183,235,0.4);
+      }
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page-header {
+      max-width: 860px;
+      margin: 0 auto 1.5rem;
+    }
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+    .tab {
+      padding: 5px 16px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      user-select: none;
+    }
+    .tab.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 500;
+      border-color: var(--border-primary);
+    }
+    .tab:hover:not(.active) { background: var(--bg-secondary); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .metric {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: .85rem 1rem;
+      flex: 1;
+      min-width: 120px;
+    }
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
+    .metric-value { font-size: 20px; font-weight: 500; color: var(--text-primary); line-height: 1.2; }
+    .metric-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+    select, input[type=number] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 0.5px solid var(--border-secondary);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: var(--font-sans);
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--border-primary);
+      box-shadow: 0 0 0 2px var(--border-info);
+    }
+
+    .field { margin-bottom: 10px; }
+    .sec {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 10px;
+    }
+    .divider { border: none; border-top: 0.5px solid var(--border-tertiary); margin: 1rem 0; }
+
+    .alert { font-size: 12px; border-radius: var(--radius-md); padding: 7px 10px; margin-top: 8px; }
+    .alert-warn { color: var(--text-warning); background: var(--bg-warning); }
+    .alert-ok   { color: var(--text-success); background: var(--bg-success); }
+    .alert-info { color: var(--text-info);    background: var(--bg-info); }
+
+    .ref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      border-bottom: 0.5px solid var(--border-tertiary);
+      font-size: 13px;
+    }
+    .ref-row:last-child { border-bottom: none; }
+    .ref-label { color: var(--text-secondary); }
+    .ref-val { font-weight: 500; color: var(--text-primary); text-align: right; flex-shrink: 0; margin-left: 8px; }
+
+    .rec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+    .rec-table th {
+      font-size: 11px; font-weight: 500; color: var(--text-tertiary);
+      text-align: left; padding: 4px 6px;
+      border-bottom: 0.5px solid var(--border-tertiary);
+    }
+    .rec-table td {
+      padding: 5px 6px;
+      border-bottom: 0.5px solid var(--border-tertiary);
+      color: var(--text-primary);
+      vertical-align: top;
+    }
+    .rec-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block; font-size: 10px;
+      padding: 1px 6px; border-radius: var(--radius-md);
+      font-weight: 500; white-space: nowrap;
+    }
+    .badge-ok   { background: var(--bg-success); color: var(--text-success); }
+    .badge-warn { background: var(--bg-warning); color: var(--text-warning); }
+    .badge-muted{ background: var(--bg-secondary); color: var(--text-secondary); }
+
+    .rs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .rs-field { display: flex; flex-direction: column; gap: 4px; }
+    .rs-field label { font-size: 12px; color: var(--text-secondary); }
+    .rs-summary {
+      font-size: 13px; color: var(--text-primary);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 10px 12px; margin-top: 4px;
+      font-family: var(--font-mono);
+      letter-spacing: .03em;
+    }
+    .rs-total { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .rs-warn {
+      font-size: 12px; color: var(--text-warning);
+      background: var(--bg-warning);
+      border-radius: var(--radius-md);
+      padding: 6px 10px; margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Illumina Flow Cell Calculator</h1>
+  <p>Single-cell sequencing depth, bulk sample planning, read structure, and loading reference.</p>
+</div>
+
+<div class="container">
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('sc')">Single-cell</div>
+    <div class="tab" onclick="switchTab('bulk')">Bulk / standard</div>
+    <div class="tab" onclick="switchTab('readstruct')">Read structure</div>
+    <div class="tab" onclick="switchTab('loading')">Loading ref</div>
+  </div>
+
+  <!-- shared instrument selector -->
+  <div class="row">
+    <div class="card" style="flex:2;min-width:260px">
+      <p class="sec">Instrument & flow cell</p>
+      <div class="field"><label>Platform</label><select id="platform" onchange="onPlatformChange()"></select></div>
+      <div class="field"><label>Flow cell / kit</label><select id="flowcell" onchange="calc()"></select></div>
+      <div class="field"><label>Read type</label>
+        <select id="readtype" onchange="calc()">
+          <option value="PE">Paired-end (PE)</option>
+          <option value="SE">Single-end (SE)</option>
+        </select>
+      </div>
+      <div class="field"><label>PhiX spike-in (%)</label><input type="number" id="phix" value="5" min="0" max="50" step="0.5" oninput="calc()"></div>
+    </div>
+    <div class="card" style="flex:1;min-width:180px">
+      <p class="sec">Flow cell output</p>
+      <div id="fc-summary"></div>
+    </div>
+  </div>
+
+  <!-- SINGLE-CELL -->
+  <div id="panel-sc" class="panel active">
+    <div class="row">
+      <div class="card" style="flex:1;min-width:240px">
+        <p class="sec">Single-cell parameters</p>
+        <div class="field"><label>Total cells / nuclei sequenced</label><input type="number" id="ncells" value="5000" min="1" step="100" oninput="calcSC()"></div>
+        <div class="field"><label>Target reads per cell</label><input type="number" id="rpc-target" value="20000" min="100" step="1000" oninput="calcSC()"></div>
+      </div>
+      <div class="card" style="flex:2;min-width:280px">
+        <p class="sec">Results — selected flow cell</p>
+        <div class="row" id="sc-metrics" style="margin-bottom:0"></div>
+        <div id="sc-note"></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="sec">Flow cell recommendations — all platforms</p>
+      <div style="overflow-x:auto">
+        <table class="rec-table">
+          <thead><tr>
+            <th>Platform</th><th>Flow cell</th><th>Usable reads</th><th>Reads/cell</th><th>Fit?</th>
+          </tr></thead>
+          <tbody id="rec-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px">Reads/cell after PhiX subtraction. Green = meets target. Yellow = exceeds target by &gt;3×. Gray = below target.</div>
+    </div>
+  </div>
+
+  <!-- BULK -->
+  <div id="panel-bulk" class="panel">
+    <div class="row">
+      <div class="card" style="flex:1;min-width:240px">
+        <p class="sec">Sample parameters</p>
+        <div class="field"><label>Number of samples</label><input type="number" id="nsamples" value="16" min="1" oninput="calcBulk()"></div>
+        <div class="field"><label>Target reads per sample (thousands)</label>
+          <input type="number" id="target" value="25000" min="100" oninput="calcBulk()">
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">e.g. 25000 = 25M reads</div>
+        </div>
+      </div>
+      <div class="card" style="flex:2;min-width:280px">
+        <p class="sec">Results</p>
+        <div class="row" id="bulk-metrics" style="margin-bottom:0"></div>
+        <div id="bulk-note"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- READ STRUCTURE -->
+  <div id="panel-readstruct" class="panel">
+    <div class="row">
+      <div class="card" style="flex:1;min-width:260px">
+        <p class="sec">Cycle inputs</p>
+        <div class="rs-grid">
+          <div class="rs-field"><label>Read 1 (cycles)</label><input type="number" id="rs-r1" value="0" min="0" max="600" oninput="calcRS()"></div>
+          <div class="rs-field"><label>Read 2 (cycles)</label><input type="number" id="rs-r2" value="0" min="0" max="600" oninput="calcRS()"></div>
+          <div class="rs-field"><label>Index 1 (cycles)</label><input type="number" id="rs-i1" value="0" min="0" max="20" oninput="calcRS()"></div>
+          <div class="rs-field"><label>Index 2 (cycles)</label><input type="number" id="rs-i2" value="0" min="0" max="20" oninput="calcRS()"></div>
+        </div>
+      </div>
+      <div class="card" style="flex:1;min-width:240px">
+        <p class="sec">Read structure summary</p>
+        <div class="rs-summary" id="rs-display">—</div>
+        <div class="rs-total" id="rs-total"></div>
+        <div id="rs-kit-note"></div>
+        <hr class="divider">
+        <p class="sec">Kit cycle compatibility</p>
+        <div id="rs-compat"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="panel-loading" class="panel">
+    <div class="row">
+      <div class="card">
+        <p class="sec">Loading parameters — <span id="plat-name-load"></span></p>
+        <div id="loading-detail"></div>
+      </div>
+      <div class="card">
+        <p class="sec">PhiX guidance by library type</p>
+        <div class="ref-row"><span class="ref-label">Standard diverse library</span><span class="ref-val">1–5%</span></div>
+        <div class="ref-row"><span class="ref-label">scRNA-seq / snRNA-seq</span><span class="ref-val">1–10%</span></div>
+        <div class="ref-row"><span class="ref-label">snRNA-seq (high N-content)</span><span class="ref-val">5–15%</span></div>
+        <div class="ref-row"><span class="ref-label">Amplicon / CRISPR screen</span><span class="ref-val">10–30%</span></div>
+        <div class="ref-row"><span class="ref-label">Low-complexity (16S etc.)</span><span class="ref-val">20–50%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PLATFORMS = {
+  "NovaSeq X / X Plus": {
+    se:0.55,
+    loading:{conc:"200–1000 pM",method:"ExAmp on-board clustering",buf:"RSB or TE",phix:"Add PhiX to library before diluting to final loading concentration."},
+    cells:{
+      "1.5B FC — 1.5B reads":{reads:1500,note:""},
+      "10B FC — 8B reads":{reads:8000,note:""},
+      "10B FC — 20B reads":{reads:20000,note:""},
+      "25B FC — 26B reads (X Plus)":{reads:26000,note:"X Plus only"},
+    },
+    kits:[100,200,300]
+  },
+  "NovaSeq 6000": {
+    se:0.55,
+    loading:{conc:"200–400 pM",method:"ExAmp on-board clustering",buf:"RSB",phix:"Spike PhiX post-dilution into final pool."},
+    cells:{
+      "SP — 800M reads":{reads:800},
+      "S1 — 1.6B reads":{reads:1600},
+      "S2 — 4B reads":{reads:4000},
+      "S4 — 10B reads":{reads:10000},
+    },
+    kits:[100,200,300]
+  },
+  "NextSeq 2000 / 1000": {
+    se:0.6,
+    loading:{conc:"650–1000 pM",method:"Patterned flow cell, XLEAP-SBS",buf:"RSB",phix:"Mix PhiX into denatured library before loading."},
+    cells:{
+      "P1 — 100M reads":{reads:100},
+      "P2 — 400M reads":{reads:400},
+      "P3 — 1.2B reads":{reads:1200,note:"NextSeq 2000 only"},
+      "P4 — 1.8B reads":{reads:1800,note:"NextSeq 2000 only"},
+    },
+    kits:[100,200,300,600]
+  },
+  "NextSeq 550": {
+    se:0.6,
+    loading:{conc:"1.0–2.2 pM",method:"Non-patterned, bridge amplification",buf:"HT1",phix:"Denature and dilute PhiX separately, then combine with library."},
+    cells:{
+      "Mid — 130M reads":{reads:130},
+      "High — 400M reads":{reads:400},
+    },
+    kits:[75,150,300]
+  },
+  "MiSeq": {
+    se:0.65,
+    loading:{conc:"5–20 pM",method:"Non-patterned, bridge amplification",buf:"HT1",phix:"Denature library and PhiX separately, then combine."},
+    cells:{
+      "Nano v2 — 1M reads":{reads:1},
+      "Nano v2 — 2M reads":{reads:2,note:"500-cycle kit"},
+      "Micro v2 — 4M reads":{reads:4},
+      "Micro v2 — 8M reads":{reads:8,note:"PE reads"},
+      "v2 — 15M reads":{reads:15},
+      "v3 — 25M reads":{reads:25},
+      "v3 — 44M reads":{reads:44,note:"PE 2×300"},
+    },
+    kits:[50,150,300,500,600]
+  }
+};
+
+const platSel=document.getElementById('platform');
+const fcSel=document.getElementById('flowcell');
+Object.keys(PLATFORMS).forEach(p=>{const o=document.createElement('option');o.value=p;o.text=p;platSel.appendChild(o);});
+
+function onPlatformChange(){
+  fcSel.innerHTML='';
+  Object.keys(PLATFORMS[platSel.value].cells).forEach(fc=>{const o=document.createElement('option');o.value=fc;o.text=fc;fcSel.appendChild(o);});
+  calc();
+}
+
+function getUsable(){
+  const plat=PLATFORMS[platSel.value];
+  const fc=plat.cells[fcSel.value];
+  const isPE=document.getElementById('readtype').value==='PE';
+  const phix=parseFloat(document.getElementById('phix').value)||0;
+  const raw=fc.reads*(isPE?1:plat.se);
+  return{usable:raw*(1-phix/100),raw,fc,plat,phix,isPE};
+}
+
+function fmtM(n){
+  if(n>=1000) return (n/1000).toFixed(n>=10000?0:1)+'B';
+  if(n<1)     return (n*1000).toFixed(0)+'K';
+  return n>=10?Math.round(n)+'M':n.toFixed(1)+'M';
+}
+function fmtRPC(n){return n>=1000?(n/1000).toFixed(1)+'M':Math.round(n).toLocaleString();}
+function metric(label,val,sub){return`<div class="metric"><div class="metric-label">${label}</div><div class="metric-value">${val}</div>${sub?`<div class="metric-sub">${sub}</div>`:''}</div>`;}
+
+function calc(){
+  const{usable,raw,fc,phix,isPE}=getUsable();
+  document.getElementById('fc-summary').innerHTML=`
+    <div class="ref-row"><span class="ref-label">Max reads (spec)</span><span class="ref-val">${fmtM(raw)}</span></div>
+    <div class="ref-row"><span class="ref-label">After ${phix}% PhiX</span><span class="ref-val">${fmtM(usable)}</span></div>
+    <div class="ref-row"><span class="ref-label">Read type</span><span class="ref-val">${isPE?'PE':'SE'}</span></div>
+    ${fc.note?`<div class="alert alert-info" style="margin-top:6px">${fc.note}</div>`:''}
+  `;
+  calcSC(usable);
+  calcBulk(usable);
+  calcLoading();
+  calcRS();
+}
+
+function calcSC(usable){
+  if(usable===undefined) usable=getUsable().usable;
+  const nCells=parseInt(document.getElementById('ncells').value)||1;
+  const rpcTarget=parseInt(document.getElementById('rpc-target').value)||20000;
+  const usableReads=usable*1e6;
+  const rpcActual=usableReads/nCells;
+  const totalNeeded=nCells*rpcTarget;
+  const fcNeeded=Math.ceil(totalNeeded/usableReads);
+  document.getElementById('sc-metrics').innerHTML=
+    metric('Reads per cell',fmtRPC(rpcActual/1000)+'k',`${nCells.toLocaleString()} cells`)+
+    metric('Total reads needed',fmtM(totalNeeded/1e6),`@ ${(rpcTarget/1000).toFixed(0)}k reads/cell`)+
+    metric('Flow cells needed',fcNeeded,'to hit target depth');
+  let cls='alert-info',msg='';
+  if(rpcActual<rpcTarget){cls='alert-warn';msg=`Reads/cell (${fmtRPC(rpcActual/1000)}k) is below your target of ${(rpcTarget/1000).toFixed(0)}k. Use a higher-output flow cell or reduce cell number.`;}
+  else if(rpcActual>rpcTarget*3){cls='alert-ok';msg=`Reads/cell exceeds target by >3×. You could sequence more cells or use a smaller flow cell.`;}
+  else{msg=`Reads/cell is within a reasonable range of your target depth.`;}
+  document.getElementById('sc-note').innerHTML=`<div class="alert ${cls}" style="margin-top:8px">${msg}</div>`;
+  buildRecTable(nCells,rpcTarget);
+}
+
+function buildRecTable(nCells,rpcTarget){
+  const phix=parseFloat(document.getElementById('phix').value)||0;
+  const isPE=document.getElementById('readtype').value==='PE';
+  const body=document.getElementById('rec-body');
+  body.innerHTML='';
+  Object.entries(PLATFORMS).forEach(([platName,plat])=>{
+    Object.entries(plat.cells).forEach(([fcName,fc])=>{
+      const raw=fc.reads*(isPE?1:plat.se);
+      const usable=raw*(1-phix/100);
+      const rpcActual=(usable*1e6)/nCells;
+      const under=rpcActual<rpcTarget;
+      const wayOver=rpcActual>rpcTarget*3;
+      const badge=under
+        ?`<span class="badge badge-muted">below target</span>`
+        :wayOver?`<span class="badge badge-warn">3× over</span>`
+        :`<span class="badge badge-ok">meets target</span>`;
+      const isSelected=platSel.value===platName&&fcSel.value===fcName;
+      const tr=document.createElement('tr');
+      if(isSelected) tr.style.cssText='outline:2px solid rgba(24,95,165,0.5);outline-offset:-2px';
+      tr.innerHTML=`
+        <td>${platName}</td>
+        <td>${fcName}${fc.note?` <span style="color:var(--text-tertiary);font-size:11px">(${fc.note})</span>`:''}</td>
+        <td>${fmtM(usable)}</td>
+        <td>${fmtRPC(rpcActual/1000)}k</td>
+        <td>${badge}</td>
+      `;
+      body.appendChild(tr);
+    });
+  });
+}
+
+function calcBulk(usable){
+  if(usable===undefined) usable=getUsable().usable;
+  const nS=parseInt(document.getElementById('nsamples').value)||1;
+  const tM=(parseFloat(document.getElementById('target').value)||25000)/1000;
+  const rps=usable/nS;
+  const fcN=Math.ceil((nS*tM)/usable);
+  const maxS=Math.floor(usable/tM);
+  document.getElementById('bulk-metrics').innerHTML=
+    metric('Reads per sample',fmtM(rps),`${nS} samples`)+
+    metric('Max samples @ target',maxS.toLocaleString(),`${fmtM(tM)} target`)+
+    metric('Flow cells needed',fcN,'for your sample #');
+  let cls='alert-info',msg='';
+  if(rps<tM){cls='alert-warn';msg=`Reads/sample (${fmtM(rps)}) is below target. Use a higher-output flow cell or reduce sample count.`;}
+  else if(rps>tM*3){cls='alert-ok';msg=`Reads/sample exceeds target by >3×. Consider more samples or a smaller flow cell.`;}
+  else{msg='Reads per sample are within a reasonable range of your target.';}
+  document.getElementById('bulk-note').innerHTML=`<div class="alert ${cls}" style="margin-top:8px">${msg}</div>`;
+}
+
+function calcRS(){
+  const r1=parseInt(document.getElementById('rs-r1').value)||0;
+  const r2=parseInt(document.getElementById('rs-r2').value)||0;
+  const i1=parseInt(document.getElementById('rs-i1').value)||0;
+  const i2=parseInt(document.getElementById('rs-i2').value)||0;
+  const total=r1+r2+i1+i2;
+  const parts=[];
+  if(r1) parts.push(`R1: ${r1} cy`);
+  if(i1) parts.push(`I1: ${i1} cy`);
+  if(i2) parts.push(`I2: ${i2} cy`);
+  if(r2) parts.push(`R2: ${r2} cy`);
+  document.getElementById('rs-display').textContent=parts.length?parts.join('  ·  '):'—';
+  document.getElementById('rs-total').textContent=total?`Total: ${total} cycles  (R1+R2: ${r1+r2} cy, Index: ${i1+i2} cy)`:'';
+  let warn='';
+  if(r2>0&&document.getElementById('readtype').value==='SE')
+    warn='Read 2 cycles are set but Single-end is selected above. Switch to Paired-end or set Read 2 to 0.';
+  if(i1===0&&i2>0)
+    warn='Index 2 is set without Index 1. Dual indexing requires Index 1 to be defined.';
+  document.getElementById('rs-kit-note').innerHTML=warn?`<div class="rs-warn">${warn}</div>`:'';
+  const kitCycles=(PLATFORMS[platSel.value].kits||[]);
+  let compatHTML='';
+  kitCycles.forEach(k=>{
+    const fits=total>0&&total<=k;
+    const waste=fits?k-total:null;
+    compatHTML+=`<div class="ref-row">
+      <span class="ref-label">${k}-cycle kit</span>
+      <span class="ref-val">${total===0?'<span style="color:var(--text-tertiary);font-size:12px">—</span>':fits
+        ?`<span class="badge badge-ok">fits</span> <span style="font-size:11px;color:var(--text-tertiary)">${waste} cy unused</span>`
+        :`<span class="badge badge-muted">too short by ${total-k} cy</span>`
+      }</span></div>`;
+  });
+  document.getElementById('rs-compat').innerHTML=compatHTML||'<span style="font-size:13px;color:var(--text-secondary)">No kit data for this platform.</span>';
+}
+
+function calcLoading(){
+  const plat=PLATFORMS[platSel.value];
+  const l=plat.loading;
+  const phix=parseFloat(document.getElementById('phix').value)||0;
+  document.getElementById('plat-name-load').textContent=platSel.value;
+  document.getElementById('loading-detail').innerHTML=`
+    <div class="ref-row"><span class="ref-label">Loading concentration</span><span class="ref-val">${l.conc}</span></div>
+    <div class="ref-row"><span class="ref-label">Clustering method</span><span class="ref-val">${l.method}</span></div>
+    <div class="ref-row"><span class="ref-label">Dilution buffer</span><span class="ref-val">${l.buf}</span></div>
+    <div class="ref-row"><span class="ref-label">PhiX (current)</span><span class="ref-val">${phix}%</span></div>
+    <div class="alert alert-info" style="margin-top:8px">${l.phix}</div>
+  `;
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['sc','bulk','readstruct','loading'][i]===t));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+}
+
+onPlatformChange();
+</script>
+</body>
+</html>
