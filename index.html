@@ -93,12 +93,6 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
     <p class="sec">Instrument & flow cell</p>
     <div class="field"><label>Platform</label><select id="platform" onchange="onPlatformChange()"></select></div>
     <div class="field"><label>Flow cell / kit</label><select id="flowcell" onchange="calc()"></select></div>
-    <div class="field"><label>Read type</label>
-      <select id="readtype" onchange="calc()">
-        <option value="PE">Paired-end (PE)</option>
-        <option value="SE">Single-end (SE)</option>
-      </select>
-    </div>
     <div class="field"><label>PhiX spike-in (%)</label><input type="number" id="phix" value="5" min="0" max="50" step="0.5" oninput="calc()"></div>
   </div>
   <div class="card" style="flex:1;min-width:180px">
@@ -159,6 +153,12 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
   <div class="row">
     <div class="card" style="flex:1;min-width:260px">
       <p class="sec">Cycle inputs</p>
+      <div class="field" style="margin-bottom:10px"><label>Read type</label>
+        <select id="readtype" onchange="calcRS()">
+          <option value="PE">Paired-end (PE)</option>
+          <option value="SE">Single-end (SE)</option>
+        </select>
+      </div>
       <div class="rs-grid">
         <div class="rs-field"><label>Read 1 (cycles)</label><input type="number" id="rs-r1" value="0" min="0" max="600" oninput="calcRS()"></div>
         <div class="rs-field"><label>Read 2 (cycles)</label><input type="number" id="rs-r2" value="0" min="0" max="600" oninput="calcRS()"></div>
@@ -211,13 +211,13 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
 // extra = bonus cycles included in the kit reagents beyond the stated kit size
 const PLATFORMS = {
   "NovaSeq X / X Plus": {
-    se:0.55,
+    se:0.5,
     loading:{conc:"200–1000 pM",method:"ExAmp on-board clustering",buf:"RSB or TE",phix:"Add PhiX to library before diluting to final loading concentration."},
     cells:{
-      "1.5B FC — 1.5B reads":{reads:1500,lanes:2,note:""},
-      "10B FC — 8B reads":{reads:8000,lanes:8,note:""},
-      "10B FC — 20B reads":{reads:20000,lanes:8,note:""},
-      "25B FC — 26B reads (X Plus)":{reads:26000,lanes:8,note:"X Plus only"},
+      "1.5B FC — ~4B reads":{reads:4000,lanes:2,note:""},
+      "5B FC — ~11.5B reads":{reads:11500,lanes:2,note:""},
+      "10B FC — ~23B reads":{reads:23000,lanes:8,note:""},
+      "25B FC — ~61B reads":{reads:61000,lanes:8,note:"X Plus only"},
     },
     kits:[
       {name:"100-cycle",  cycles:100, extra:38},
@@ -306,10 +306,9 @@ function onPlatformChange(){
 function getUsable(){
   const plat=PLATFORMS[platSel.value];
   const fc=plat.cells[fcSel.value];
-  const isPE=document.getElementById('readtype').value==='PE';
   const phix=parseFloat(document.getElementById('phix').value)||0;
-  const raw=fc.reads*(isPE?1:plat.se);
-  return{usable:raw*(1-phix/100),raw,fc,plat,phix,isPE};
+  const raw=fc.reads;
+  return{usable:raw*(1-phix/100),raw,fc,plat,phix};
 }
 
 function fmtM(n){
@@ -327,7 +326,6 @@ function calc(){
   document.getElementById('fc-summary').innerHTML=`
     <div class="ref-row"><span class="ref-label">Max reads (spec)</span><span class="ref-val">${fmtM(raw)}</span></div>
     <div class="ref-row"><span class="ref-label">After ${phix}% PhiX</span><span class="ref-val">${fmtM(usable)}</span></div>
-    <div class="ref-row"><span class="ref-label">Read type</span><span class="ref-val">${isPE?'PE':'SE'}</span></div>
     <div class="ref-row"><span class="ref-label">Lanes</span><span class="ref-val">${lanes}</span></div>
     <div class="ref-row"><span class="ref-label">Reads / lane</span><span class="ref-val">${fmtM(rpl)}</span></div>
     ${fc.note?`<div class="alert alert-info" style="margin-top:6px">${fc.note}</div>`:''}
@@ -370,12 +368,11 @@ function calcSC(usable){
 
 function buildRecTable(nCells,rpcTarget){
   const phix=parseFloat(document.getElementById('phix').value)||0;
-  const isPE=document.getElementById('readtype').value==='PE';
   const body=document.getElementById('rec-body');
   body.innerHTML='';
   Object.entries(PLATFORMS).forEach(([platName,plat])=>{
     Object.entries(plat.cells).forEach(([fcName,fc])=>{
-      const raw=fc.reads*(isPE?1:plat.se);
+      const raw=fc.reads;
       const usable=raw*(1-phix/100);
       const usableReads=usable*1e6;
       const rpcActual=usableReads/nCells;
