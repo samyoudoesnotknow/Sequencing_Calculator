@@ -1,76 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Illumina Flow Cell Calculator</title>
-  <style>
-    :root {
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-      --border-radius-md: 8px;
-      --border-radius-lg: 12px;
-      --color-background-primary: #ffffff;
-      --color-background-secondary: #f5f5f4;
-      --color-background-tertiary: #f0efed;
-      --color-background-info: #e6f1fb;
-      --color-background-success: #eaf3de;
-      --color-background-warning: #faeeda;
-      --color-text-primary: #1a1a18;
-      --color-text-secondary: #5f5e5a;
-      --color-text-tertiary: #888780;
-      --color-text-info: #185fa5;
-      --color-text-success: #3b6d11;
-      --color-text-warning: #854f0b;
-      --color-border-tertiary: rgba(26,26,24,0.15);
-      --color-border-secondary: rgba(26,26,24,0.3);
-      --color-border-primary: rgba(26,26,24,0.4);
-      --color-border-info: rgba(24,95,165,0.4);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --color-background-primary: #1e1e1c;
-        --color-background-secondary: #2a2a28;
-        --color-background-tertiary: #242422;
-        --color-background-info: #042c53;
-        --color-background-success: #173404;
-        --color-background-warning: #412402;
-        --color-text-primary: #f0efe9;
-        --color-text-secondary: #b4b2a9;
-        --color-text-tertiary: #888780;
-        --color-text-info: #85b7eb;
-        --color-text-success: #97c459;
-        --color-text-warning: #ef9f27;
-        --color-border-tertiary: rgba(240,239,233,0.15);
-        --color-border-secondary: rgba(240,239,233,0.3);
-        --color-border-primary: rgba(240,239,233,0.4);
-        --color-border-info: rgba(133,183,235,0.4);
-      }
-    }
-    html, body {
-      margin: 0; padding: 0;
-      background: var(--color-background-tertiary);
-      color: var(--color-text-primary);
-      min-height: 100vh;
-    }
-    .page-wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem 1.25rem 4rem;
-    }
-    .page-header { margin-bottom: 1.5rem; }
-    .page-header h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
-    .page-header p { font-size: 13px; color: var(--color-text-tertiary); }
-    .sr-only { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0); }
-  </style>
-</head>
-<body>
-<div class="page-wrap">
-  <div class="page-header">
-    <h1>Illumina Flow Cell Calculator</h1>
-    <p>Single-cell sequencing depth, bulk sample planning, read structure, and loading reference.</p>
-  </div>
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Illumina Flow Cell Calculator</title>
+<style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-sans)}
 .wrap{padding:1rem 0 2.5rem}
@@ -116,6 +50,9 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
 .compat-table td{padding:5px 6px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
 .compat-table tr:last-child td{border-bottom:none}
 </style>
+</head>
+<body>
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Illumina flow cell calculator</h2>
 
 <div class="wrap">
 <div class="tab-bar">
@@ -150,7 +87,7 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
   <div class="row">
     <div class="card" style="flex:1;min-width:240px">
       <p class="sec">Single-cell parameters</p>
-      <div class="field"><label>Total cells / nuclei sequenced</label><input type="number" id="ncells" value="5000" min="1" step="100" oninput="calcSC()"></div>
+      <div class="field"><label>Total cells / nuclei sequenced</label><input type="number" id="ncells" value="100000" min="1" step="100" oninput="calcSC()"></div>
       <div class="field"><label>Target reads per cell</label><input type="number" id="rpc-target" value="20000" min="100" step="1000" oninput="calcSC()"></div>
     </div>
     <div class="card" style="flex:2;min-width:280px">
@@ -164,12 +101,12 @@ select,input[type=number]{width:100%;padding:6px 8px;border:0.5px solid var(--co
     <div style="overflow-x:auto">
       <table class="rec-table">
         <thead><tr>
-          <th>Platform</th><th>Flow cell</th><th>Usable reads</th><th>Reads/cell</th><th>Fit?</th>
+          <th>Platform</th><th>Flow cell</th><th>Usable reads</th><th>Reads/cell</th><th>Fit?</th><th>Lanes needed</th>
         </tr></thead>
         <tbody id="rec-body"></tbody>
       </table>
     </div>
-    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">Reads/cell after PhiX subtraction. Green = meets target. Yellow = exceeds target by &gt;3×. Gray = below target.</div>
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">Reads/cell after PhiX subtraction. Options &gt;25% below target are hidden. Green = meets target. Yellow = exceeds target by &gt;3×. Gray = within 25% below target. Lanes needed = minimum lanes to reach total read target (NovaSeq X / 6000 have multiple addressable lanes; all others are single-lane).</div>
   </div>
 </div>
 
@@ -252,10 +189,10 @@ const PLATFORMS = {
     se:0.55,
     loading:{conc:"200–1000 pM",method:"ExAmp on-board clustering",buf:"RSB or TE",phix:"Add PhiX to library before diluting to final loading concentration."},
     cells:{
-      "1.5B FC — 1.5B reads":{reads:1500,note:""},
-      "10B FC — 8B reads":{reads:8000,note:""},
-      "10B FC — 20B reads":{reads:20000,note:""},
-      "25B FC — 26B reads (X Plus)":{reads:26000,note:"X Plus only"},
+      "1.5B FC — 1.5B reads":{reads:1500,lanes:2,note:""},
+      "10B FC — 8B reads":{reads:8000,lanes:8,note:""},
+      "10B FC — 20B reads":{reads:20000,lanes:8,note:""},
+      "25B FC — 26B reads (X Plus)":{reads:26000,lanes:8,note:"X Plus only"},
     },
     kits:[
       {name:"100-cycle",  cycles:100, extra:38},
@@ -267,10 +204,10 @@ const PLATFORMS = {
     se:0.55,
     loading:{conc:"200–400 pM",method:"ExAmp on-board clustering",buf:"RSB",phix:"Spike PhiX post-dilution into final pool."},
     cells:{
-      "SP — 800M reads":{reads:800},
-      "S1 — 1.6B reads":{reads:1600},
-      "S2 — 4B reads":{reads:4000},
-      "S4 — 10B reads":{reads:10000},
+      "SP — 800M reads":{reads:800,lanes:2},
+      "S1 — 1.6B reads":{reads:1600,lanes:2},
+      "S2 — 4B reads":{reads:4000,lanes:2},
+      "S4 — 10B reads":{reads:10000,lanes:4},
     },
     kits:[
       {name:"100-cycle",  cycles:100, extra:38},
@@ -283,10 +220,10 @@ const PLATFORMS = {
     se:0.6,
     loading:{conc:"650–1000 pM",method:"Patterned flow cell, XLEAP-SBS",buf:"RSB",phix:"Mix PhiX into denatured library before loading."},
     cells:{
-      "P1 — 100M reads":{reads:100},
-      "P2 — 400M reads":{reads:400},
-      "P3 — 1.2B reads":{reads:1200,note:"NextSeq 2000 only"},
-      "P4 — 1.8B reads":{reads:1800,note:"NextSeq 2000 only"},
+      "P1 — 100M reads":{reads:100,lanes:1},
+      "P2 — 400M reads":{reads:400,lanes:1},
+      "P3 — 1.2B reads":{reads:1200,lanes:1,note:"NextSeq 2000 only"},
+      "P4 — 1.8B reads":{reads:1800,lanes:1,note:"NextSeq 2000 only"},
     },
     kits:[
       {name:"100-cycle",  cycles:100, extra:38},
@@ -299,8 +236,8 @@ const PLATFORMS = {
     se:0.6,
     loading:{conc:"1.0–2.2 pM",method:"Non-patterned, bridge amplification",buf:"HT1",phix:"Denature and dilute PhiX separately, then combine with library."},
     cells:{
-      "Mid — 130M reads":{reads:130},
-      "High — 400M reads":{reads:400},
+      "Mid — 130M reads":{reads:130,lanes:1},
+      "High — 400M reads":{reads:400,lanes:1},
     },
     kits:[
       {name:"75-cycle",   cycles:75,  extra:17},
@@ -312,13 +249,13 @@ const PLATFORMS = {
     se:0.65,
     loading:{conc:"5–20 pM",method:"Non-patterned, bridge amplification",buf:"HT1",phix:"Denature library and PhiX separately, then combine."},
     cells:{
-      "Nano v2 — 1M reads":{reads:1},
-      "Nano v2 — 2M reads":{reads:2,note:"500-cycle kit"},
-      "Micro v2 — 4M reads":{reads:4},
-      "Micro v2 — 8M reads":{reads:8,note:"PE reads"},
-      "v2 — 15M reads":{reads:15},
-      "v3 — 25M reads":{reads:25},
-      "v3 — 44M reads":{reads:44,note:"PE 2×300"},
+      "Nano v2 — 1M reads":{reads:1,lanes:1},
+      "Nano v2 — 2M reads":{reads:2,lanes:1,note:"500-cycle kit"},
+      "Micro v2 — 4M reads":{reads:4,lanes:1},
+      "Micro v2 — 8M reads":{reads:8,lanes:1,note:"PE reads"},
+      "v2 — 15M reads":{reads:15,lanes:1},
+      "v3 — 25M reads":{reads:25,lanes:1},
+      "v3 — 44M reads":{reads:44,lanes:1,note:"PE 2×300"},
     },
     kits:[
       {name:"50-cycle (v2)",   cycles:50,  extra:26},
@@ -360,10 +297,14 @@ function metric(label,val,sub){return`<div class="metric"><div class="metric-lab
 
 function calc(){
   const{usable,raw,fc,phix,isPE}=getUsable();
+  const lanes=fc.lanes||1;
+  const rpl=usable/lanes;
   document.getElementById('fc-summary').innerHTML=`
     <div class="ref-row"><span class="ref-label">Max reads (spec)</span><span class="ref-val">${fmtM(raw)}</span></div>
     <div class="ref-row"><span class="ref-label">After ${phix}% PhiX</span><span class="ref-val">${fmtM(usable)}</span></div>
     <div class="ref-row"><span class="ref-label">Read type</span><span class="ref-val">${isPE?'PE':'SE'}</span></div>
+    <div class="ref-row"><span class="ref-label">Lanes</span><span class="ref-val">${lanes}</span></div>
+    <div class="ref-row"><span class="ref-label">Reads / lane</span><span class="ref-val">${fmtM(rpl)}</span></div>
     ${fc.note?`<div class="alert alert-info" style="margin-top:6px">${fc.note}</div>`:''}
   `;
   calcSC(usable);
@@ -373,17 +314,27 @@ function calc(){
 }
 
 function calcSC(usable){
-  if(usable===undefined) usable=getUsable().usable;
+  const g=getUsable();
+  if(usable===undefined) usable=g.usable;
   const nCells=parseInt(document.getElementById('ncells').value)||1;
   const rpcTarget=parseInt(document.getElementById('rpc-target').value)||20000;
   const usableReads=usable*1e6;
   const rpcActual=usableReads/nCells;
   const totalNeeded=nCells*rpcTarget;
   const fcNeeded=Math.ceil(totalNeeded/usableReads);
+  const lanes=g.fc.lanes||1;
+  const readsPerLane=usableReads/lanes;
+  const rawLanesNeeded=Math.ceil(totalNeeded/readsPerLane);
+  const lanesNeeded=Math.min(rawLanesNeeded,lanes*fcNeeded);
+  let laneSub;
+  if(lanes===1){laneSub=`single-lane flow cell`;}
+  else if(fcNeeded<=1){laneSub=`of ${lanes} lanes (1 flow cell)`;}
+  else{laneSub=`across ${fcNeeded} flow cells`;}
   document.getElementById('sc-metrics').innerHTML=
     metric('Reads per cell',fmtRPC(rpcActual/1000)+'k',`${nCells.toLocaleString()} cells`)+
     metric('Total reads needed',fmtM(totalNeeded/1e6),`@ ${(rpcTarget/1000).toFixed(0)}k reads/cell`)+
-    metric('Flow cells needed',fcNeeded,'to hit target depth');
+    metric('Flow cells needed',fcNeeded,'to hit target depth')+
+    metric('Lanes needed',lanesNeeded,laneSub);
   let cls='alert-info',msg='';
   if(rpcActual<rpcTarget){cls='alert-warn';msg=`Reads/cell (${fmtRPC(rpcActual/1000)}k) is below your target of ${(rpcTarget/1000).toFixed(0)}k. Use a higher-output flow cell or reduce cell number.`;}
   else if(rpcActual>rpcTarget*3){cls='alert-ok';msg=`Reads/cell exceeds target by >3×. You could sequence more cells or use a smaller flow cell.`;}
@@ -401,13 +352,27 @@ function buildRecTable(nCells,rpcTarget){
     Object.entries(plat.cells).forEach(([fcName,fc])=>{
       const raw=fc.reads*(isPE?1:plat.se);
       const usable=raw*(1-phix/100);
-      const rpcActual=(usable*1e6)/nCells;
+      const usableReads=usable*1e6;
+      const rpcActual=usableReads/nCells;
+      const totalNeeded=nCells*rpcTarget;
+      // hide options more than 25% below target
+      if(rpcActual < rpcTarget*0.75) return;
       const under=rpcActual<rpcTarget;
       const wayOver=rpcActual>rpcTarget*3;
       const badge=under
         ?`<span class="badge badge-muted">below target</span>`
         :wayOver?`<span class="badge badge-warn">3× over</span>`
         :`<span class="badge badge-ok">meets target</span>`;
+      // lanes calculation
+      const fcLanes=fc.lanes||1;
+      const readsPerLane=usableReads/fcLanes;
+      const fcNeeded=Math.ceil(totalNeeded/usableReads);
+      const rawLanesNeeded=Math.ceil(totalNeeded/readsPerLane);
+      const lanesNeeded=Math.min(rawLanesNeeded,fcLanes*fcNeeded);
+      let laneStr;
+      if(fcLanes===1){laneStr=`${lanesNeeded} <span style="color:var(--color-text-tertiary);font-size:11px">(1 lane FC)</span>`;}
+      else if(fcNeeded<=1){laneStr=`${lanesNeeded} <span style="color:var(--color-text-tertiary);font-size:11px">of ${fcLanes}</span>`;}
+      else{laneStr=`${lanesNeeded} <span style="color:var(--color-text-tertiary);font-size:11px">across ${fcNeeded} FCs</span>`;}
       const isSelected=platSel.value===platName&&fcSel.value===fcName;
       const tr=document.createElement('tr');
       if(isSelected) tr.style.cssText='outline:2px solid var(--color-border-info);outline-offset:-2px';
@@ -417,6 +382,7 @@ function buildRecTable(nCells,rpcTarget){
         <td>${fmtM(usable)}</td>
         <td>${fmtRPC(rpcActual/1000)}k</td>
         <td>${badge}</td>
+        <td>${laneStr}</td>
       `;
       body.appendChild(tr);
     });
@@ -424,16 +390,27 @@ function buildRecTable(nCells,rpcTarget){
 }
 
 function calcBulk(usable){
-  if(usable===undefined) usable=getUsable().usable;
+  const g=getUsable();
+  if(usable===undefined) usable=g.usable;
   const nS=parseInt(document.getElementById('nsamples').value)||1;
   const tM=(parseFloat(document.getElementById('target').value)||25000)/1000;
   const rps=usable/nS;
   const fcN=Math.ceil((nS*tM)/usable);
   const maxS=Math.floor(usable/tM);
+  const lanes=g.fc.lanes||1;
+  const readsPerLaneMil=usable/lanes;
+  const totalNeededMil=nS*tM;
+  const rawLanesNeeded=Math.ceil(totalNeededMil/readsPerLaneMil);
+  const lanesNeeded=Math.min(rawLanesNeeded,lanes*fcN);
+  let laneSub;
+  if(lanes===1){laneSub=`single-lane flow cell`;}
+  else if(fcN<=1){laneSub=`of ${lanes} lanes (1 flow cell)`;}
+  else{laneSub=`across ${fcN} flow cells`;}
   document.getElementById('bulk-metrics').innerHTML=
     metric('Reads per sample',fmtM(rps),`${nS} samples`)+
     metric('Max samples @ target',maxS.toLocaleString(),`${fmtM(tM)} target`)+
-    metric('Flow cells needed',fcN,'for your sample #');
+    metric('Flow cells needed',fcN,'for your sample #')+
+    metric('Lanes needed',lanesNeeded,laneSub);
   let cls='alert-info',msg='';
   if(rps<tM){cls='alert-warn';msg=`Reads/sample (${fmtM(rps)}) is below target. Use a higher-output flow cell or reduce sample count.`;}
   else if(rps>tM*3){cls='alert-ok';msg=`Reads/sample exceeds target by >3×. Consider more samples or a smaller flow cell.`;}
@@ -513,6 +490,5 @@ function switchTab(t){
 
 onPlatformChange();
 </script>
-</div>
 </body>
 </html>
